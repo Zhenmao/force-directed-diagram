@@ -1,28 +1,43 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
-  </div>
+  <v-app>
+    <v-main>
+      <v-container>
+        <v-row>
+          <v-col cols="12">
+            <ForceDirectedDiagram :graph="graph" @select="selected = $event" />
+          </v-col>
+          <div cols="12">Selected nodes: {{ selected }}</div>
+        </v-row>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import { csv } from "d3";
+import ForceDirectedDiagram from "./components/ForceDirectedDiagram";
 
 export default {
   name: "App",
   components: {
-    HelloWorld,
+    ForceDirectedDiagram,
+  },
+  data: () => ({
+    graph: {
+      nodes: [],
+      links: [],
+    },
+    selected: [],
+  }),
+  created() {
+    Promise.all([csv("/data/d3_nodes.csv"), csv("/data/d3_links.csv")]).then(
+      ([nodes, links]) => {
+        this.graph = {
+          nodes,
+          links,
+        };
+      }
+    );
   },
 };
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
