@@ -1,5 +1,13 @@
 <template>
-  <div v-resize.quiet="onResize"></div>
+  <div>
+    <div>
+      <v-btn-toggle v-model="action" mandatory>
+        <v-btn value="lasso"> Lasso </v-btn>
+        <v-btn value="zoom"> Zoom </v-btn>
+      </v-btn-toggle>
+    </div>
+    <div ref="chartContainer" v-resize.quiet="onResize"></div>
+  </div>
 </template>
 
 <script>
@@ -11,6 +19,8 @@ import {
   forceX,
   forceY,
   select,
+  zoom,
+  zoomIdentity,
 } from "d3";
 import lasso from "@/utilities/lasso";
 
@@ -32,6 +42,8 @@ export default {
     linkWidth: 2,
     nodes: [],
     links: [],
+    action: "lasso",
+    transform: zoomIdentity,
   }),
   computed: {
     simulation() {
@@ -59,6 +71,11 @@ export default {
         .on("draw", this.lassoDrawn)
         .on("end", this.lassoEnded);
     },
+    zoom() {
+      return zoom()
+        .scaleExtent([1 / 16, 16])
+        .on("zoom", this.zoomed);
+    },
   },
   watch: {
     graph: {
@@ -79,26 +96,41 @@ export default {
       },
       immediate: true,
     },
+    action() {
+      this.actionToggled();
+    },
   },
   mounted() {
-    this.svg = select(this.$el).append("svg");
-    this.gLink = this.svg
+    this.svg = select(this.$refs.chartContainer).append("svg");
+    this.g = this.svg.append("g");
+    this.gLink = this.g
       .append("g")
       .attr("class", "links-g")
       .selectAll(".link-g");
-    this.gNode = this.svg
+    this.gNode = this.g
       .append("g")
       .attr("class", "nodes-g")
       .selectAll(".node-g");
 
     this.lasso.targetArea(this.svg);
-    this.svg.call(this.lasso);
+    this.g.call(this.lasso);
+    this.svg.call(this.zoom);
 
     this.onResize();
+    this.actionToggled();
   },
   methods: {
+    actionToggled() {
+      if (this.action === "lasso") {
+        this.lasso.enabled(true);
+        this.svg.on(".zoom", null);
+      } else if (this.action === "zoom") {
+        this.lasso.enabled(false);
+        this.svg.call(this.zoom);
+      }
+    },
     onResize() {
-      this.width = this.$el.clientWidth;
+      this.width = this.$refs.chartContainer.clientWidth;
 
       this.svg.attr("viewBox", [
         -this.width / 2,
@@ -225,6 +257,11 @@ export default {
         selectedItemsIds.has(d.id)
       );
       this.$emit("select", selectedNodes);
+    },
+    zoomed(event) {
+      this.transform = event.transform;
+      this.g.attr("transform", this.transform);
+      this.lasso.zoomTransform(this.transform);
     },
   },
 };

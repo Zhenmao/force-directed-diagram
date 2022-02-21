@@ -1,5 +1,5 @@
-// https://github.com/skokenes/d3-lasso/blob/master/src/lasso.js
-import { drag, pointer } from "d3";
+// Modified from https://github.com/skokenes/d3-lasso/blob/master/src/lasso.js
+import { drag, pointer, zoomIdentity } from "d3";
 import classifyPoint from "robust-point-in-polygon";
 
 export default function () {
@@ -9,7 +9,21 @@ export default function () {
     isPathClosed = false,
     hoverSelect = true,
     targetArea,
-    on = { start: function () {}, draw: function () {}, end: function () {} };
+    on = { start: function () {}, draw: function () {}, end: function () {} },
+    enabled = true,
+    zoomTransform = zoomIdentity;
+
+  var dragAction;
+
+  function enable() {
+    // Call drag
+    if (targetArea) targetArea.call(dragAction);
+  }
+
+  function disable() {
+    if (targetArea)
+      targetArea.on(".start", null).on(".drag", null).on(".end", null);
+  }
 
   // Function to execute on call
   function lasso(_this) {
@@ -38,13 +52,10 @@ export default function () {
     var drawnCoords;
 
     // Apply drag behaviors
-    var dragAction = drag()
+    dragAction = drag()
       .on("start", dragstart)
       .on("drag", dragmove)
       .on("end", dragend);
-
-    // Call drag
-    targetArea.call(dragAction);
 
     function dragstart() {
       // Init coordinates
@@ -94,6 +105,7 @@ export default function () {
 
       // Get mouse position within drawing area, used for rendering
       var [tx, ty] = pointer(event, this);
+      [tx, ty] = zoomTransform.invert([tx, ty]);
 
       // Initialize the path or add the latest point to it
       if (tpath === "") {
@@ -263,6 +275,25 @@ export default function () {
   lasso.targetArea = function (_) {
     if (!arguments.length) return targetArea;
     targetArea = _;
+    return lasso;
+  };
+
+  // Enable/disable lasso
+  lasso.enabled = function (_) {
+    if (!arguments.length) return enabled;
+    enabled = _ === true ? true : false;
+    if (enabled) {
+      enable();
+    } else {
+      disable();
+    }
+    return lasso;
+  };
+
+  // Zoom transform to adjust drag move coordinates
+  lasso.zoomTransform = function (_) {
+    if (!arguments.length) return zoomTransform;
+    zoomTransform = _;
     return lasso;
   };
 
