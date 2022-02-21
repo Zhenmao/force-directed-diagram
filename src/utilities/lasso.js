@@ -156,10 +156,22 @@ export default function () {
         n.__lasso.possible = false;
       });
 
-      // Clear lasso
-      dyn_path.attr("d", null);
-      close_path.attr("d", null);
-      origin_node.attr("display", "none");
+      // If no selected
+      if (
+        items
+          .filter(function () {
+            return this.__lasso.selected;
+          })
+          .size() === 0
+      ) {
+        // Clear lasso
+        dyn_path.attr("d", null);
+        close_path.attr("d", null);
+        origin_node.attr("display", "none");
+      } else {
+        // Close the dyn_path
+        dyn_path.attr("d", tpath + "Z");
+      }
 
       // Run user defined end function
       on.end();
