@@ -1,28 +1,12 @@
 <template>
   <v-app>
     <v-main>
-      <v-container>
-        <v-row>
-          <div cols="12">
-            Instruction
-            <ul>
-              <li>Toggle between lasso and zoom actions.</li>
-              <li>
-                When the lasso action is selected, left click and drag to select
-                nodes.
-              </li>
-              <li>
-                When the zoom action is selected, mouse wheel up/down to zoom
-                in/out, left click and drag to pan.
-              </li>
-            </ul>
-          </div>
-          <v-col cols="12">
-            <ForceDirectedDiagram :graph="graph" @select="selected = $event" />
-          </v-col>
-          <div cols="12">Selected nodes: {{ selected }}</div>
-        </v-row>
-      </v-container>
+      <div class="pa-3 full-height-stack">
+        <div>
+          <ForceDirectedDiagram :graph="graph" @select="selected = $event" />
+        </div>
+        <div class="lasso-output">Selected nodes: {{ selected }}</div>
+      </div>
     </v-main>
   </v-app>
 </template>
@@ -55,3 +39,17 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.full-height-stack {
+  width: 100%;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr 6rem;
+  gap: 2rem;
+}
+
+.lasso-output {
+  overflow-y: auto;
+}
+</style>

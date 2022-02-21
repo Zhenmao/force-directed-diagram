@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="force-directed-diagram-wrapper">
     <div>
       <v-btn-toggle v-model="action" mandatory>
         <v-btn value="lasso"> Lasso </v-btn>
@@ -36,8 +36,8 @@ export default {
     },
   },
   data: () => ({
-    width: 960,
-    height: 500,
+    width: 300,
+    height: 150,
     nodeRadius: 16,
     linkWidth: 2,
     nodes: [],
@@ -131,13 +131,17 @@ export default {
     },
     onResize() {
       this.width = this.$refs.chartContainer.clientWidth;
+      this.height = Math.min(this.$refs.chartContainer.clientHeight, 500);
 
-      this.svg.attr("viewBox", [
-        -this.width / 2,
-        -this.height / 2,
-        this.width,
-        this.height,
-      ]);
+      this.svg
+        .attr("viewBox", [
+          -this.width / 2,
+          -this.height / 2,
+          this.width,
+          this.height,
+        ])
+        .attr("width", this.width)
+        .attr("height", this.height);
 
       this.render();
     },
@@ -266,6 +270,15 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.force-directed-diagram-wrapper {
+  height: 100%;
+  display: grid;
+  grid-template-rows: min-content 1fr;
+  gap: 1rem;
+}
+</style>
 
 <style>
 .lasso path {
