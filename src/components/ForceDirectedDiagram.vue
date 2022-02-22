@@ -6,7 +6,11 @@
         <v-btn value="zoom"> Zoom </v-btn>
       </v-btn-toggle>
     </div>
-    <div ref="chartContainer" v-resize.quiet="onResize"></div>
+    <div
+      ref="chartContainer"
+      v-resize.quiet="onResize"
+      class="chart-wrapper"
+    ></div>
   </div>
 </template>
 
@@ -101,7 +105,9 @@ export default {
     },
   },
   mounted() {
-    this.svg = select(this.$refs.chartContainer).append("svg");
+    this.svg = select(this.$refs.chartContainer)
+      .append("svg")
+      .attr("class", "chart-svg");
     this.g = this.svg.append("g");
     this.gLink = this.g
       .append("g")
@@ -131,7 +137,7 @@ export default {
     },
     onResize() {
       this.width = this.$refs.chartContainer.clientWidth;
-      this.height = Math.max(this.$refs.chartContainer.clientHeight, 500);
+      this.height = this.$refs.chartContainer.clientHeight;
 
       this.svg
         .attr("viewBox", [
@@ -277,6 +283,15 @@ export default {
   display: grid;
   grid-template-rows: min-content 1fr;
   gap: 1rem;
+}
+
+.chart-wrapper {
+  position: inherit;
+}
+
+.chart-wrapper >>> .chart-svg {
+  position: absolute;
+  display: block;
 }
 </style>
 
