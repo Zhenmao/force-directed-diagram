@@ -131,7 +131,7 @@ export default {
     },
     onResize() {
       this.width = this.$refs.chartContainer.clientWidth;
-      this.height = Math.min(this.$refs.chartContainer.clientHeight, 500);
+      this.height = Math.max(this.$refs.chartContainer.clientHeight, 500);
 
       this.svg
         .attr("viewBox", [
