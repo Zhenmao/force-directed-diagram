@@ -116,7 +116,7 @@ export default function () {
         origin_node
           .attr("cx", tx)
           .attr("cy", ty)
-          .attr("r", 7)
+          .attr("r", 3)
           .attr("display", null);
       } else {
         tpath = tpath + " L " + tx + " " + ty;

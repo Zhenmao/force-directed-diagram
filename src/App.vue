@@ -1,31 +1,25 @@
 <template>
   <v-app>
     <v-main>
-      <div class="pa-3 full-height-stack">
-        <div>
-          <ForceDirectedDiagram :graph="graph" @select="selected = $event" />
-        </div>
-        <div class="lasso-output">Selected nodes: {{ selected }}</div>
-      </div>
+      <GraphVis title="Graph Title" :graph="graph" @select="onSelect" />
     </v-main>
   </v-app>
 </template>
 
 <script>
 import { csv } from "d3";
-import ForceDirectedDiagram from "./components/ForceDirectedDiagram";
+import GraphVis from "./components/GraphVis";
 
 export default {
   name: "App",
   components: {
-    ForceDirectedDiagram,
+    GraphVis,
   },
   data: () => ({
     graph: {
       nodes: [],
       links: [],
     },
-    selected: [],
   }),
   created() {
     Promise.all([csv("/data/d3_nodes.csv"), csv("/data/d3_links.csv")]).then(
@@ -37,19 +31,10 @@ export default {
       }
     );
   },
+  methods: {
+    onSelect(event) {
+      console.log(event);
+    },
+  },
 };
 </script>
-
-<style scoped>
-.full-height-stack {
-  width: 100%;
-  min-height: 100vh;
-  display: grid;
-  grid-template-rows: 1fr 6rem;
-  gap: 2rem;
-}
-
-.lasso-output {
-  overflow-y: auto;
-}
-</style>

@@ -1,17 +1,5 @@
 <template>
-  <div class="force-directed-diagram-wrapper">
-    <div>
-      <v-btn-toggle v-model="action" mandatory>
-        <v-btn value="lasso"> Lasso </v-btn>
-        <v-btn value="zoom"> Zoom </v-btn>
-      </v-btn-toggle>
-    </div>
-    <div
-      ref="chartContainer"
-      v-resize.quiet="onResize"
-      class="chart-wrapper"
-    ></div>
-  </div>
+  <div v-resize.quiet="onResize" class="chart-wrapper"></div>
 </template>
 
 <script>
@@ -22,6 +10,7 @@ import {
   forceSimulation,
   forceX,
   forceY,
+  scaleSequential,
   select,
   zoom,
   zoomIdentity,
@@ -29,7 +18,7 @@ import {
 import lasso from "@/utilities/lasso";
 
 export default {
-  name: "ForceDirectedDiagram",
+  name: "GraphVisDiagram",
   props: {
     graph: {
       type: Object,
@@ -38,18 +27,28 @@ export default {
         links: [],
       }),
     },
+    action: {
+      type: String,
+      required: true,
+    },
+    colorScheme: {
+      type: Function,
+      required: true,
+    },
   },
   data: () => ({
     width: 300,
     height: 150,
-    nodeRadius: 16,
+    nodeRadius: 5,
     linkWidth: 2,
+    transform: zoomIdentity,
     nodes: [],
     links: [],
-    action: "lasso",
-    transform: zoomIdentity,
   }),
   computed: {
+    color() {
+      return scaleSequential().domain([0, 1]).interpolator(this.colorScheme);
+    },
     simulation() {
       return forceSimulation()
         .force("charge", forceManyBody().strength(-200))
@@ -57,7 +56,7 @@ export default {
           "link",
           forceLink()
             .id((d) => d.id)
-            .distance(80)
+            .distance(50)
         )
         .force("x", forceX())
         .force("y", forceY())
@@ -88,9 +87,7 @@ export default {
           ? new Map(this.gNode.data().map((d) => [d.id, d]))
           : new Map();
         this.nodes = nodes.map((d) => Object.assign(old.get(d.id) || {}, d));
-        this.links = links.map((d) =>
-          Object.assign({ source: d.from, target: d.to }, d)
-        );
+        this.links = links;
 
         this.simulation.nodes(this.nodes);
         this.simulation.force("link").links(this.links);
@@ -103,11 +100,12 @@ export default {
     action() {
       this.actionToggled();
     },
+    color() {
+      this.render();
+    },
   },
   mounted() {
-    this.svg = select(this.$refs.chartContainer)
-      .append("svg")
-      .attr("class", "chart-svg");
+    this.svg = select(this.$el).append("svg").attr("class", "chart-svg");
     this.g = this.svg.append("g");
     this.gLink = this.g
       .append("g")
@@ -136,8 +134,8 @@ export default {
       }
     },
     onResize() {
-      this.width = this.$refs.chartContainer.clientWidth;
-      this.height = this.$refs.chartContainer.clientHeight;
+      this.width = this.$el.clientWidth;
+      this.height = this.$el.clientHeight;
 
       this.svg
         .attr("viewBox", [
@@ -176,7 +174,6 @@ export default {
                 .attr("stroke-width", this.linkWidth)
             )
         )
-
         .call((g) =>
           g
             .select("linearGradient")
@@ -186,8 +183,8 @@ export default {
             .attr("y2", (d) => d.target.y)
             .selectAll("stop")
             .data((d) => [
-              { stopColor: d.source.color, offset: "0%" },
-              { stopColor: d.target.color, offset: "100%" },
+              { stopColor: this.color(d.source.value), offset: "0%" },
+              { stopColor: this.color(d.target.value), offset: "100%" },
             ])
             .join((enter) =>
               enter.append("stop").attr("offset", (d) => d.offset)
@@ -216,19 +213,11 @@ export default {
                 .attr("fill", "currentColor")
                 .attr("r", this.nodeRadius)
             )
-            .call((g) =>
-              g
-                .append("text")
-                .attr("class", "node-text")
-                .attr("text-anchor", "middle")
-                .attr("dy", "0.35em")
-                .attr("fill", "#fff")
-                .attr("font-size", "12px")
-            )
         )
         .attr("transform", (d) => `translate(${d.x},${d.y})`)
-        .call((g) => g.select(".node-circle").style("color", (d) => d.color))
-        .call((g) => g.select(".node-text").text((d) => d.id));
+        .call((g) =>
+          g.select(".node-circle").style("color", (d) => this.color(d.value))
+        );
 
       this.lasso.items(this.gNode);
     },
@@ -278,47 +267,39 @@ export default {
 </script>
 
 <style scoped>
-.force-directed-diagram-wrapper {
-  height: 100%;
-  display: grid;
-  grid-template-rows: min-content 1fr;
-  gap: 1rem;
-}
-
 .chart-wrapper {
-  position: inherit;
+  position: relative;
 }
 
 .chart-wrapper >>> .chart-svg {
   position: absolute;
   display: block;
 }
-</style>
 
-<style>
-.lasso path {
-  stroke: #424242;
+.chart-wrapper >>> .node-circle {
+  filter: drop-shadow(0px 0px 2px currentColor);
+}
+
+.chart-wrapper >>> .possible .node-circle,
+.chart-wrapper >>> .selected .node-circle {
+  transform: scale(1.5);
+}
+
+.chart-wrapper >>> .lasso path {
+  stroke: #1867c0;
   stroke-width: 2px;
 }
 
-.lasso .drawn {
+.chart-wrapper >>> .lasso .drawn {
   fill-opacity: 0.05;
 }
 
-.lasso .loop_close {
+.chart-wrapper >>> .lasso .loop_close {
   fill: none;
   stroke-dasharray: 4, 4;
 }
 
-.lasso .origin {
-  fill: #424242;
-  fill-opacity: 0.5;
-}
-
-.possible .node-circle,
-.selected .node-circle {
-  stroke: currentColor;
-  stroke-opacity: 0.5;
-  stroke-width: 10px;
+.chart-wrapper >>> .lasso .origin {
+  fill: #1867c0;
 }
 </style>
