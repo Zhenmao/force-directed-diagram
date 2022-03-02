@@ -20,7 +20,6 @@ export default {
   methods: {
     labelChange() {
       this.$emit("label-change", this.label);
-      this.label = "";
     },
   },
 };

@@ -27,12 +27,12 @@
       </div>
       <div class="graph-vis-table">
         <GraphVisTable :nodes="tableNodes" :columns="tableColumns" />
-        <div
-          v-show="tableNodes.length"
-          class="graph-vis-controls graph-vis-controls--table"
-        >
-          <GraphVisTableControlLabel @label-change="saveLabel" />
-          <GraphVisTableControlDownload :nodes="tableNodes" />
+        <div class="graph-vis-controls graph-vis-controls--table">
+          <GraphVisTableControlLabel
+            @label-change="saveLabel"
+            v-if="tableNodes.length"
+          />
+          <GraphVisTableControlDownload :nodes="nodeDetails" class="ml-auto" />
         </div>
       </div>
     </v-card-text>
@@ -199,7 +199,7 @@ export default {
 
 .graph-vis-graph {
   height: 100%;
-  min-height: 640px;
+  min-height: 600px;
   display: grid;
   grid-template-rows: auto 1fr 120px;
   gap: 1rem;
