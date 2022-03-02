@@ -5,7 +5,6 @@
       v-model="model"
       label="Color Scheme"
       filled
-      color="primary"
       hide-details
     ></v-select>
   </div>

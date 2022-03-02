@@ -272,7 +272,6 @@ export default {
 }
 
 .chart-wrapper >>> .chart-svg {
-  position: absolute;
   display: block;
 }
 

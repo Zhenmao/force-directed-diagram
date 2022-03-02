@@ -3,8 +3,8 @@
     <v-card-title>
       {{ title }}
     </v-card-title>
-    <v-card-text>
-      <div class="graph-vis-body">
+    <v-card-text class="graph-vis-body">
+      <div class="graph-vis-graph">
         <div class="graph-vis-controls">
           <GraphVisControlAction v-model="action" :options="actions" />
           <GraphVisControlColorScheme
@@ -25,6 +25,16 @@
           :color-scheme="colorScheme.value"
         />
       </div>
+      <div class="graph-vis-table">
+        <GraphVisTable :nodes="tableNodes" :columns="tableColumns" />
+        <div
+          v-show="tableNodes.length"
+          class="graph-vis-controls graph-vis-controls--table"
+        >
+          <GraphVisTableControlLabel @label-change="saveLabel" />
+          <GraphVisTableControlDownload :nodes="tableNodes" />
+        </div>
+      </div>
     </v-card-text>
   </v-card>
 </template>
@@ -43,6 +53,9 @@ import GraphVisControlColorScheme from "./GraphVisControlColorScheme";
 import GraphVisControlBackground from "./GraphVisControlBackground";
 import GraphVisDiagram from "./GraphVisDiagram";
 import GraphVisHistogram from "./GraphVisHistogram";
+import GraphVisTable from "./GraphVisTable";
+import GraphVisTableControlLabel from "./GraphVisTableControlLabel";
+import GraphVisTableControlDownload from "./GraphVisTableControlDownload";
 
 const actions = [
   { key: "Lasso", value: "lasso" },
@@ -73,6 +86,9 @@ export default {
     GraphVisControlBackground,
     GraphVisDiagram,
     GraphVisHistogram,
+    GraphVisTable,
+    GraphVisTableControlLabel,
+    GraphVisTableControlDownload,
   },
   props: {
     graph: {
@@ -80,6 +96,7 @@ export default {
       default: () => ({
         nodes: [],
         links: [],
+        nodeDetails: [],
       }),
     },
     title: {
@@ -88,13 +105,26 @@ export default {
     },
   },
   data: () => ({
-    action: actions[0],
+    action: actions[1],
     actions,
-    colorScheme: colorSchemes[0],
+    colorScheme: colorSchemes[2],
     colorSchemes,
-    background: 0,
+    background: 1,
     selectedNodes: [],
+    nodeDetails: [],
   }),
+  watch: {
+    graph: {
+      handler(graph) {
+        this.nodeDetails =
+          graph.nodeDetails?.map((d) => ({
+            ...d,
+            label: "",
+          })) || [];
+      },
+      immediate: true,
+    },
+  },
   computed: {
     processedGraph() {
       return {
@@ -119,11 +149,36 @@ export default {
         ? this.selectedNodes
         : this.processedGraph.nodes;
     },
+    tableColumns() {
+      return this.graph?.nodeDetails?.columns
+        ? [...this.graph.nodeDetails.columns, "label"]
+        : [];
+    },
+    selectedNodesIdsSet() {
+      return new Set(this.selectedNodes.map((d) => d.id));
+    },
+    tableNodes() {
+      return this.selectedNodes.length
+        ? this.nodeDetails.filter((d) =>
+            this.selectedNodesIdsSet.has(d.cluster_id)
+          )
+        : [];
+    },
   },
   methods: {
     onSelect(event) {
       this.$emit("select", event);
       this.selectedNodes = event;
+    },
+    saveLabel(event) {
+      this.nodeDetails = this.nodeDetails.map((d) =>
+        this.selectedNodesIdsSet.has(d.cluster_id)
+          ? {
+              ...d,
+              label: event,
+            }
+          : d
+      );
     },
   },
 };
@@ -137,9 +192,17 @@ export default {
 }
 
 .graph-vis-body {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 1rem;
+}
+
+.graph-vis-graph {
   height: 100%;
+  min-height: 640px;
   display: grid;
   grid-template-rows: auto 1fr 120px;
+  gap: 1rem;
 }
 
 .graph-vis-controls {

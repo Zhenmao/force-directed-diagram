@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-main>
-      <GraphVis title="Graph Title" :graph="graph" @select="onSelect" />
+      <GraphVis title="Synthesis Graph" :graph="graph" />
     </v-main>
   </v-app>
 </template>
@@ -22,19 +22,20 @@ export default {
     },
   }),
   created() {
-    Promise.all([csv("/data/d3_nodes.csv"), csv("/data/d3_links.csv")]).then(
-      ([nodes, links]) => {
-        this.graph = {
-          nodes,
-          links,
-        };
-      }
-    );
-  },
-  methods: {
-    onSelect(event) {
-      console.log(event);
-    },
+    Promise.all([
+      csv("/data/d3_nodes.csv"),
+      csv("/data/d3_links.csv"),
+      csv("/data/table.csv"),
+    ]).then(([nodes, links, nodeDetails]) => {
+      Object.freeze(nodes);
+      Object.freeze(links);
+      Object.freeze(nodeDetails);
+      this.graph = {
+        nodes,
+        links,
+        nodeDetails,
+      };
+    });
   },
 };
 </script>
