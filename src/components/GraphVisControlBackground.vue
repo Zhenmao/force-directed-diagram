@@ -41,8 +41,23 @@ export default {
 
 <style scoped>
 .background-color-picker-wrapper {
-  width: 300px;
   display: flex;
   align-items: center;
+}
+
+.background-color-picker-wrapper >>> .v-slider.theme--light .primary {
+  background-color: rgba(0, 0, 0, 0.87) !important;
+  border-color: rgba(0, 0, 0, 0.87) !important;
+}
+
+.background-color-picker-wrapper
+  >>> .v-slider.theme--light
+  .v-slider__thumb:before {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.background-color-picker-wrapper >>> .v-slider.theme--light .primary.lighten-3 {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
 }
 </style>

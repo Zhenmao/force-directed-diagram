@@ -1,48 +1,49 @@
 <template>
-  <v-card class="graph-vis" :style="{ backgroundColor }" :dark="dark" flat>
-    <v-card-title>
-      {{ title }}
-    </v-card-title>
-    <v-card-text class="graph-vis-body">
-      <div class="graph-vis-graph">
-        <div class="graph-vis-controls">
-          <GraphVisControlAction v-model="action" :options="actions" />
+  <v-sheet class="graph-vis" :style="{ backgroundColor }" :dark="dark">
+    <div class="graph-vis-graph pa-4">
+      <div class="graph-vis-graph-aside">
+        <h1 class="text-h5">{{ title }}</h1>
+        <div class="graph-vis-controls graph-vis-controls--graph">
           <GraphVisControlColorScheme
-            v-model="colorScheme"
-            :options="colorSchemes"
+            v-model="colorSchemeType"
+            :options="colorSchemeTypes"
           />
+          <GraphVisControlReverseColorScheme v-model="reverseColorScheme" />
+          <GraphVisControlAction v-model="action" :options="actions" />
           <GraphVisControlBackground v-model="background" />
         </div>
-        <GraphVisDiagram
-          :graph="processedGraph"
-          :action="action.value"
-          :color-scheme="colorScheme.value"
-          @select="onSelect"
-        />
         <GraphVisHistogram
           :nodes="processedGraph.nodes"
           :selected-nodes="histogramNodes"
-          :color-scheme="colorScheme.value"
+          :color-scheme="colorScheme"
         />
       </div>
-      <div class="graph-vis-table">
-        <GraphVisTable :nodes="tableNodes" :columns="tableColumns" />
-        <div class="graph-vis-controls graph-vis-controls--table">
-          <GraphVisTableControlLabel
-            @label-change="saveLabel"
-            v-if="tableNodes.length"
-          />
-          <GraphVisTableControlDownload :nodes="nodeDetails" class="ml-auto" />
-        </div>
+      <div class="graph-vis-graph-main">
+        <GraphVisDiagram
+          :graph="processedGraph"
+          :action="action.value"
+          :color-scheme="colorScheme"
+          @select="onSelect"
+        />
       </div>
-    </v-card-text>
-  </v-card>
+    </div>
+    <div class="graph-vis-table pa-4">
+      <GraphVisTable :nodes="tableNodes" :columns="tableColumns" />
+      <div class="graph-vis-controls graph-vis-controls--table">
+        <GraphVisTableControlLabel
+          @label-change="saveLabel"
+          v-if="tableNodes.length"
+        />
+        <GraphVisTableControlDownload :nodes="nodeDetails" class="ml-auto" />
+      </div>
+    </div>
+  </v-sheet>
 </template>
 
 <script>
 import {
+  interpolateRgb,
   interpolateTurbo,
-  interpolateRdBu,
   interpolateInferno,
   interpolateViridis,
   interpolateGreys,
@@ -50,6 +51,7 @@ import {
 
 import GraphVisControlAction from "./GraphVisControlAction";
 import GraphVisControlColorScheme from "./GraphVisControlColorScheme";
+import GraphVisControlReverseColorScheme from "./GraphVisControlReverseColorScheme";
 import GraphVisControlBackground from "./GraphVisControlBackground";
 import GraphVisDiagram from "./GraphVisDiagram";
 import GraphVisHistogram from "./GraphVisHistogram";
@@ -60,16 +62,17 @@ import GraphVisTableControlDownload from "./GraphVisTableControlDownload";
 const actions = [
   { key: "Lasso", value: "lasso" },
   { key: "Zoom", value: "zoom" },
+  { key: "Shape", value: "shape" },
 ];
 
-const colorSchemes = [
+const colorSchemeTypes = [
   {
     key: "Turbo",
     value: interpolateTurbo,
   },
   {
     key: "BlueRed",
-    value: (t) => interpolateRdBu(1 - t),
+    value: interpolateRgb("#0000ff", "#e80018"),
   },
   { key: "Thermal", value: interpolateInferno },
   {
@@ -83,6 +86,7 @@ export default {
   components: {
     GraphVisControlAction,
     GraphVisControlColorScheme,
+    GraphVisControlReverseColorScheme,
     GraphVisControlBackground,
     GraphVisDiagram,
     GraphVisHistogram,
@@ -107,9 +111,10 @@ export default {
   data: () => ({
     action: actions[1],
     actions,
-    colorScheme: colorSchemes[2],
-    colorSchemes,
+    colorSchemeType: colorSchemeTypes[2],
+    colorSchemeTypes,
     background: 1,
+    reverseColorScheme: false,
     selectedNodes: [],
     nodeDetails: [],
   }),
@@ -137,6 +142,11 @@ export default {
           target: d.to,
         })),
       };
+    },
+    colorScheme() {
+      return this.reverseColorScheme
+        ? (t) => this.colorSchemeType.value(1 - t)
+        : this.colorSchemeType.value;
     },
     backgroundColor() {
       return interpolateGreys(this.background);
@@ -185,34 +195,42 @@ export default {
 </script>
 
 <style scoped>
-.graph-vis {
-  min-height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
-
-.graph-vis-body {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 1rem;
-}
-
 .graph-vis-graph {
-  height: 100%;
-  min-height: 600px;
-  display: grid;
-  grid-template-rows: auto 1fr 120px;
-  gap: 1rem;
+  min-height: 100vh;
 }
 
-.graph-vis-controls {
+.graph-vis-graph-main {
+  height: 600px;
+}
+
+@media (min-width: 1024px) {
+  .graph-vis-graph {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 2rem;
+  }
+
+  .graph-vis-graph-main {
+    height: 100%;
+  }
+}
+
+.graph-vis-graph-aside {
+  display: grid;
+  gap: 2rem;
+  grid-template-rows: auto auto 1fr;
+}
+
+.graph-vis-graph-aside > *:last-child {
+  margin-top: auto;
+}
+
+.graph-vis-controls--table {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  margin: -1rem;
 }
 
-.graph-vis-controls > * {
-  padding: 1rem;
+.graph-vis-controls > * + * {
+  margin-top: 2rem;
 }
 </style>

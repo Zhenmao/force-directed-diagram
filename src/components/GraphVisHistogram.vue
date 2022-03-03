@@ -1,6 +1,11 @@
 <template>
-  <div v-resize="onResize" class="chart-wrapper">
-    <svg class="chart-svg" :viewBox="`0 0 ${width} ${height}`">
+  <div class="chart-wrapper">
+    <svg
+      class="chart-svg"
+      :viewBox="`0 0 ${width} ${height}`"
+      :width="width"
+      :height="height"
+    >
       <g class="bins-g">
         <rect
           v-for="d in rects"
@@ -42,11 +47,11 @@ export default {
     },
   },
   data: () => ({
-    width: 300,
+    width: 224,
     height: 100,
-    marginTop: 1,
+    marginTop: 2,
     marginRight: 4,
-    marginBottom: 1,
+    marginBottom: 2,
     marginLeft: 4,
     binsCount: 20,
   }),
@@ -91,20 +96,10 @@ export default {
       return scaleSequential().domain([0, 1]).interpolator(this.colorScheme);
     },
   },
-  methods: {
-    onResize() {
-      this.width = this.$el.clientWidth;
-      this.height = this.$el.clientHeight;
-    },
-  },
 };
 </script>
 
 <style scoped>
-.chart-wrapper {
-  max-width: 400px;
-}
-
 .zero-line {
   stroke: currentColor;
 }

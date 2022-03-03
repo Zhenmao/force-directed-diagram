@@ -36,10 +36,6 @@ export default {
 </script>
 
 <style scoped>
-.graph-vis-table-wrapper {
-  height: 390px;
-}
-
 >>> .v-data-footer {
   justify-content: flex-end;
 }
