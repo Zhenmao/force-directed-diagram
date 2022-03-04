@@ -206,8 +206,8 @@ export default {
 @media (min-width: 1024px) {
   .graph-vis-graph {
     display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 2rem;
+    grid-template-columns: 204px 1fr;
+    gap: 1rem;
   }
 
   .graph-vis-graph-main {
@@ -217,7 +217,7 @@ export default {
 
 .graph-vis-graph-aside {
   display: grid;
-  gap: 2rem;
+  gap: 1rem;
   grid-template-rows: auto auto 1fr;
 }
 
@@ -231,6 +231,6 @@ export default {
 }
 
 .graph-vis-controls > * + * {
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 </style>

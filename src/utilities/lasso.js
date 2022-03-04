@@ -13,17 +13,7 @@ export default function () {
     enabled = true,
     zoomTransform = zoomIdentity;
 
-  var dragAction;
-
-  function enable() {
-    // Call drag
-    if (targetArea) targetArea.call(dragAction);
-  }
-
-  function disable() {
-    if (targetArea)
-      targetArea.on(".start", null).on(".drag", null).on(".end", null);
-  }
+  var enable, disable, clear;
 
   // Function to execute on call
   function lasso(_this) {
@@ -52,10 +42,30 @@ export default function () {
     var drawnCoords;
 
     // Apply drag behaviors
-    dragAction = drag()
+    var dragAction = drag()
       .on("start", dragstart)
       .on("drag", dragmove)
       .on("end", dragend);
+
+    enable = function () {
+      // Call drag
+      if (targetArea) targetArea.call(dragAction);
+    };
+
+    disable = function () {
+      if (targetArea)
+        targetArea.on(".start", null).on(".drag", null).on(".end", null);
+    };
+
+    clear = function () {
+      items.nodes().forEach(function (n) {
+        n.__lasso.selected = false;
+      });
+      dyn_path.attr("d", null);
+      close_path.attr("d", null);
+      origin_node.attr("display", "none");
+      on.end();
+    };
 
     function dragstart() {
       // Init coordinates
@@ -294,6 +304,12 @@ export default function () {
   lasso.zoomTransform = function (_) {
     if (!arguments.length) return zoomTransform;
     zoomTransform = _;
+    return lasso;
+  };
+
+  // Clear lasso selection
+  lasso.clear = function () {
+    clear();
     return lasso;
   };
 

@@ -47,12 +47,12 @@ export default {
     },
   },
   data: () => ({
-    width: 224,
-    height: 100,
-    marginTop: 2,
-    marginRight: 4,
-    marginBottom: 2,
-    marginLeft: 4,
+    width: 202,
+    height: 102,
+    marginTop: 1,
+    marginRight: 1,
+    marginBottom: 1,
+    marginLeft: 1,
     binsCount: 20,
   }),
   computed: {
@@ -100,6 +100,10 @@ export default {
 </script>
 
 <style scoped>
+.chart-svg {
+  display: block;
+}
+
 .zero-line {
   stroke: currentColor;
 }

@@ -65,7 +65,7 @@ export default {
           "collision",
           forceCollide().radius(this.nodeRadius).iterations(2)
         )
-        .stop();
+        .on("tick", this.ticked);
     },
     lasso() {
       return lasso()
@@ -96,6 +96,7 @@ export default {
         this.nodes = nodes.map((d) => Object.assign(old.get(d.id) || {}, d));
         this.links = links;
 
+        this.simulation.stop();
         this.simulation.nodes(this.nodes);
         this.simulation.force("link").links(this.links);
         this.simulation.alpha(1).tick(300);
@@ -149,7 +150,7 @@ export default {
           .on(".drag", null)
           .on(".end", null);
       } else if (this.action === "shape") {
-        this.lasso.enabled(false);
+        this.lasso.enabled(false).clear();
         this.svg.on(".zoom", null);
         this.node.classed("is-draggable", true).call(this.drag);
       }
@@ -230,36 +231,46 @@ export default {
           enter
             .append("circle")
             .attr("class", "node-circle")
-            .attr("fill", "currentColor")
             .attr("r", this.nodeRadius)
         )
         .attr("transform", (d) => `translate(${d.x},${d.y})`)
-        .style("color", (d) => this.color(d.value));
+        .attr("fill", (d) => this.color(d.value));
+
+      this.lasso.items(this.node);
+    },
+    ticked() {
+      this.link
+        .call((g) =>
+          g
+            .select("linearGradient")
+            .attr("x1", (d) => d.source.x)
+            .attr("y1", (d) => d.source.y)
+            .attr("x2", (d) => d.target.x)
+            .attr("y2", (d) => d.target.y)
+        )
+        .call((g) =>
+          g
+            .select(".link-line")
+            .attr("x1", (d) => d.source.x)
+            .attr("y1", (d) => d.source.y)
+            .attr("x2", (d) => d.target.x)
+            .attr("y2", (d) => d.target.y)
+        );
+
+      this.node.attr("transform", (d) => `translate(${d.x},${d.y})`);
 
       this.lasso.items(this.node);
     },
     lassoStarted() {
-      this.lasso
-        .items()
-        .classed("not-possible", true)
-        .classed("selected", false);
+      this.lasso.items().classed("selected", false);
     },
     lassoDrawn() {
-      this.lasso
-        .possibleItems()
-        .classed("not-possible", false)
-        .classed("possible", true);
+      this.lasso.possibleItems().classed("possible", true);
 
-      this.lasso
-        .notPossibleItems()
-        .classed("not-possible", true)
-        .classed("possible", false);
+      this.lasso.notPossibleItems().classed("possible", false);
     },
     lassoEnded() {
-      this.lasso
-        .items()
-        .classed("not-possible", false)
-        .classed("possible", false);
+      this.lasso.items().classed("possible", false).classed("selected", false);
 
       this.lasso.selectedItems().classed("selected", true);
 
@@ -282,15 +293,20 @@ export default {
     dragStarted(event) {
       this.svg.classed("is-dragging", true);
       select(event.sourceEvent.target).classed("is-dragging", true);
+      if (!event.active) this.simulation.alphaTarget(0.3).restart();
+      event.subject.fx = event.x;
+      event.subject.fy = event.y;
     },
     dragged(event) {
-      event.subject.x = event.x;
-      event.subject.y = event.y;
-      this.render();
+      event.subject.fx = event.x;
+      event.subject.fy = event.y;
     },
     dragEnded(event) {
       this.svg.classed("is-dragging", false);
       select(event.sourceEvent.target).classed("is-dragging", false);
+      if (!event.active) this.simulation.alphaTarget(0);
+      event.subject.fx = null;
+      event.subject.fy = null;
     },
   },
 };
@@ -304,11 +320,6 @@ export default {
 
 .chart-wrapper >>> .chart-svg {
   display: block;
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
 }
 
 /* .chart-wrapper >>> .node-circle {
@@ -324,9 +335,9 @@ export default {
   cursor: grabbing;
 }
 
-.chart-wrapper >>> .possible .node-circle,
-.chart-wrapper >>> .selected .node-circle {
-  transform: scale(1.5);
+.chart-wrapper >>> .node-circle.possible,
+.chart-wrapper >>> .node-circle.selected {
+  fill: currentColor;
 }
 
 .chart-wrapper >>> .lasso path {

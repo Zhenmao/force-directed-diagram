@@ -1,7 +1,7 @@
 <template>
   <div class="action-toggle-wrapper">
     <v-btn-toggle v-model="model" mandatory>
-      <v-btn v-for="option in options" :key="option.key" :value="option">
+      <v-btn v-for="option in options" :key="option.key" :value="option" small>
         {{ option.key }}
       </v-btn>
     </v-btn-toggle>
